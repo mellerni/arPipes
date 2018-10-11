@@ -10,7 +10,7 @@ class StraightPipe {
             new THREE.MeshBasicMaterial({color:0xff00ff, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
             new THREE.MeshBasicMaterial({color:0x00ffff, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
           ]; 
-          const cubeMesh = new THREE.MeshFaceMaterial(cubeMaterials); 
+
           // Translate the cube up 0.25m so that the origin of the cube
           // is on its bottom face
       
@@ -20,7 +20,7 @@ class StraightPipe {
           const cubeGeometry = new THREE.BoxBufferGeometry(cubeWidth, cubeHeight, cubeDepth);
           cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, -(cubeHeight/2), 0));
       
-          this.cube = new THREE.Mesh(cubeGeometry, cubeMesh);
+          this.cube = new THREE.Mesh(cubeGeometry, cubeMaterials);
       
           const cylinderMaterial = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.5, side: THREE.DoubleSide});
           // Translate the cube up 0.25m so that the origin of the cube

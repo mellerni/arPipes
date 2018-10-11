@@ -1,4 +1,4 @@
-class FourWayPipe {
+class TeePipe {
     constructor() {
         this.childMesh = [];
 
@@ -23,15 +23,15 @@ class FourWayPipe {
           this.cube = new THREE.Mesh(cubeGeometry, cubeMaterials);
       
           const cylinderMaterial = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.5, side: THREE.DoubleSide});
-          // Translate the cube up 0.25m so that the origin of the cube
-          // is on its bottom face
-          const cylinderGeometry = new THREE.CylinderGeometry(0.1, 0.1, cubeWidth, 40, 10, true);
-          cylinderGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, (cubeHeight/2) - 0.05));
-      
-          this.cylinder1 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+
+          const cylinderGeometry1 = new THREE.CylinderGeometry(0.1, 0.1, cubeWidth, 40, 10, true);
+          cylinderGeometry1.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, (cubeHeight/2) - 0.05));
+          this.cylinder1 = new THREE.Mesh(cylinderGeometry1, cylinderMaterial);
           this.cylinder1.rotation.x = Math.PI / 2;
 
-          this.cylinder2 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+          const cylinderGeometry2 = new THREE.CylinderGeometry(0.1, 0.1, (cubeWidth/2), 40, 10, true);
+          cylinderGeometry2.applyMatrix(new THREE.Matrix4().makeTranslation(0, (cubeWidth/4), (cubeHeight/2) - 0.05));
+          this.cylinder2 = new THREE.Mesh(cylinderGeometry2, cylinderMaterial);
           this.cylinder2.rotation.x = Math.PI / 2;
           this.cylinder2.rotation.z = Math.PI / 2;
 

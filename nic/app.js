@@ -19,11 +19,25 @@
  */
 class App {
   constructor() {
+
+    this.pipes = [];
+    this.currentPipe = new StraightPipe();
+    this.typeIndex = 0;
+    this.types = ["Straight", "Tee", "FourWay"];
+    this.currentHitMatrix = undefined;
+    this.currentX = 0;
+    this.currentY = 0;
+    this.currentRotationZ = 0;
+
     this.onXRFrame = this.onXRFrame.bind(this);
     this.onEnterAR = this.onEnterAR.bind(this);
-    this.MakePipe = this.MakePipe.bind(this)
+    this.setHitMatrix = this.setHitMatrix.bind(this);
+    this.clearCurrentPipe = this.clearCurrentPipe.bind(this);
+    this.PlacePipe = this.PlacePipe.bind(this)
     this.onClick = this.onClick.bind(this);
     this.onDblClick = this.onDblClick.bind(this);
+
+    this.ChangeType = this.ChangeType.bind(this);
 
     
     this.init();
@@ -70,7 +84,12 @@ class App {
     // gesture, we must create an XRPresentationContext on a
     // canvas element.
     const outputCanvas = document.createElement('canvas');
+    outputCanvas.addEventListener('click', this.onClick);
+    outputCanvas.addEventListener('dblclick', this.onDblClick);
     const ctx = outputCanvas.getContext('xrpresent');
+
+    const typeButton = document.getElementById('typeBtn');
+    typeButton.addEventListener('click', this.ChangeType);
 
     try {
       // Request a session for the XRDevice with the XRPresentationContext
@@ -85,7 +104,8 @@ class App {
       // If `requestSession` is successful, add the canvas to the
       // DOM since we know it will now be used.
       document.body.appendChild(outputCanvas);
-      this.onSessionStarted(session)
+      this.onSessionStarted(session);
+      this.addGUIControls();
     } catch (e) {
       // If `requestSession` fails, the canvas is not added, and we
       // call our function for unsupported browsers.
@@ -99,6 +119,19 @@ class App {
    */
   onNoXRDevice() {
     document.body.classList.add('unsupported');
+  }
+
+  addGUIControls() {
+    // const pipeTypeText = this.gui.add(text, 'Type', [ 'Straight', 'Tee', 'Four Way' ] );
+
+    // pipeTypeText.onChange(async function(type) {
+    //   if(type === 'Tee')
+    //     this.currentPipe = new TeePipe();
+    //   if(type === 'Four Way')
+    //     this.currentPipe = new FourWayPipe();
+
+    //   this.currentPipe = new StraightPipe();
+    // });
   }
 
   /**
@@ -134,35 +167,6 @@ class App {
     // render scene.
     this.scene = new THREE.Scene();
 
-    // const cubeMaterials = [ 
-    //   new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.1, side: THREE.DoubleSide}),
-    //   new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
-    //   new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.2, side: THREE.BackSide}), // top
-    //   new THREE.MeshBasicMaterial({color:0xffff00, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
-    //   new THREE.MeshBasicMaterial({color:0xff00ff, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
-    //   new THREE.MeshBasicMaterial({color:0x00ffff, transparent:true, opacity:0.1, side: THREE.DoubleSide}), 
-    // ]; 
-    // const cubeMesh = new THREE.MeshFaceMaterial(cubeMaterials); 
-    // // Translate the cube up 0.25m so that the origin of the cube
-    // // is on its bottom face
-
-    // const cubeWidth = 0.5;
-    // const cubeHeight = 0.5;
-    // const cubeDepth = 0.5;
-    // const cubeGeometry = new THREE.BoxBufferGeometry(cubeWidth, cubeHeight, cubeDepth);
-    // cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, -(cubeHeight/2), 0));
-
-    // this.cube = new THREE.Mesh(cubeGeometry, cubeMesh);
-
-    // const cylinderMaterial = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.5, side: THREE.DoubleSide});
-    // // Translate the cube up 0.25m so that the origin of the cube
-    // // is on its bottom face
-    // const cylinderGeometry = new THREE.CylinderGeometry(0.1, 0.1, cubeWidth, 40, 10, true);
-    // cylinderGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, (cubeHeight/2) - 0.5));
-
-    // this.cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-    // this.cylinder.rotation.x = Math.PI / 2;
-
     // We'll update the camera matrices directly from API, so
     // disable matrix auto updates so three.js doesn't attempt
     // to handle the matrices independently.
@@ -180,9 +184,6 @@ class App {
 
     this.frameOfRef = await this.session.requestFrameOfReference('eye-level');
     this.session.requestAnimationFrame(this.onXRFrame);
-
-    window.addEventListener('click', this.onClick);
-    window.addEventListener('dblclick', this.onDblClick);
   }
 
   /**
@@ -238,7 +239,7 @@ class App {
    * the screen, and if a hit is found, use it to place our object
    * at the point of collision.
    */
-  async MakePipe(pipeType) {
+  async PlacePipe() {
     // The requestHitTest function takes an x and y coordinate in
     // Normalized Device Coordinates, where the upper left is (-1, 1)
     // and the bottom right is (1, -1). This makes (0, 0) our center.
@@ -276,24 +277,56 @@ class App {
       // the ray hit an object, and the orientation has a Y-axis that corresponds
       // with the normal of the object at that location.
       // Turn this matrix into a THREE.Matrix4().
-      const hitMatrix = new THREE.Matrix4().fromArray(hit.hitMatrix);
+      this.currentHitMatrix = new THREE.Matrix4().fromArray(hit.hitMatrix);
 
-      if(!pipeType)
-        pipeType = new StraightPipe();
-
-      pipeType.childMesh.forEach(child => {
-          child.position.setFromMatrixPosition(hitMatrix);
-          this.scene.add(child);
+      this.setHitMatrix();
+    }
+  }
+  async setHitMatrix(){  
+    if(this.currentHitMatrix) {
+      this.currentPipe.childMesh.forEach(child => {
+        child.position.setFromMatrixPosition(this.currentHitMatrix);
+        this.scene.add(child);
       });
     }
   }
-  async onDblClick(){
-    const fourWay = new FourWayPipe();
-    this.MakePipe(fourWay);
+
+  async clearCurrentPipe(){  
+    if(this.currentHitMatrix) {
+      this.currentPipe.childMesh.forEach(child => {
+        this.scene.remove(child);
+      });
+    }
   }
+
   async onClick(){
-    const straightPipe = new StraightPipe();
-    this.MakePipe(straightPipe);
+    this.PlacePipe();
+  }
+
+  async onDblClick(){
+    this.PlacePipe();
+  }
+
+  async ChangeType(){
+    this.clearCurrentPipe();
+
+    this.typeIndex += 1;
+
+    if(this.typeIndex > (this.types.length - 1))
+      this.typeIndex = 0;
+
+    switch(this.types[this.typeIndex]) {
+        case "Tee":
+          this.currentPipe = new TeePipe();
+          break;
+        case "FourWay":
+          this.currentPipe = new FourWayPipe();
+          break;
+        default:
+          this.currentPipe = new StraightPipe();
+    }
+
+    this.setHitMatrix();
   }
 };
 
