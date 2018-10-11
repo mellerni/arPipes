@@ -20,7 +20,6 @@
 class App {
   constructor() {
 
-    this.pipes = [];
     this.currentPipe = new StraightPipe();
     this.typeIndex = 0;
     this.types = ["Straight", "Tee", "FourWay"];
@@ -32,13 +31,17 @@ class App {
     this.onXRFrame = this.onXRFrame.bind(this);
     this.onEnterAR = this.onEnterAR.bind(this);
     this.setHitMatrix = this.setHitMatrix.bind(this);
+    this.setType = this.setType.bind(this);
     this.clearCurrentPipe = this.clearCurrentPipe.bind(this);
     this.PlacePipe = this.PlacePipe.bind(this)
     this.onClick = this.onClick.bind(this);
     this.onDblClick = this.onDblClick.bind(this);
 
     this.ChangeType = this.ChangeType.bind(this);
-
+    this.save = this.save.bind(this);
+    this.rotateRight = this.rotateRight.bind(this);
+    this.rotateRight5 = this.rotateRight5.bind(this);
+    this.rotateRight90 = this.rotateRight90.bind(this);
     
     this.init();
   }
@@ -90,6 +93,15 @@ class App {
 
     const typeButton = document.getElementById('typeBtn');
     typeButton.addEventListener('click', this.ChangeType);
+
+    const saveButton = document.getElementById('saveBtn');
+    saveButton.addEventListener('click', this.save);
+
+    const rotate5Button = document.getElementById('rotate5Btn');
+    rotate5Button.addEventListener('click', this.rotateRight5);
+
+    const rotate90Button = document.getElementById('rotate90Btn');
+    rotate90Button.addEventListener('click', this.rotateRight90);
 
     try {
       // Request a session for the XRDevice with the XRPresentationContext
@@ -307,26 +319,52 @@ class App {
     this.PlacePipe();
   }
 
-  async ChangeType(){
-    this.clearCurrentPipe();
+  async save(){
+    this.currentPipe = new StraightPipe();
+    this.typeIndex = 0;
+  }
 
+  async setType(){
+    this.clearCurrentPipe();
+    switch(this.types[this.typeIndex]) {
+      case "Tee":
+        this.currentPipe = new TeePipe(this.currentRotationZ);
+        break;
+      case "FourWay":
+        this.currentPipe = new FourWayPipe(this.currentRotationZ);
+        break;
+      default:
+        this.currentPipe = new StraightPipe(this.currentRotationZ);
+    }
+
+    this.setHitMatrix();
+  }
+
+  async rotateRight5(){
+    this.rotateRight(5);
+  }
+
+  async rotateRight90(){
+    this.rotateRight(90);
+  }
+
+  async rotateRight(degrees){
+    this.currentRotationZ += degrees;
+
+    if(this.currentRotationZ > 360) {
+      this.currentRotationZ = this.currentRotationZ - 360;
+    }
+
+    this.setType();
+  }
+
+  async ChangeType(){
     this.typeIndex += 1;
 
     if(this.typeIndex > (this.types.length - 1))
       this.typeIndex = 0;
-
-    switch(this.types[this.typeIndex]) {
-        case "Tee":
-          this.currentPipe = new TeePipe();
-          break;
-        case "FourWay":
-          this.currentPipe = new FourWayPipe();
-          break;
-        default:
-          this.currentPipe = new StraightPipe();
-    }
-
-    this.setHitMatrix();
+    
+    this.setType();
   }
 };
 

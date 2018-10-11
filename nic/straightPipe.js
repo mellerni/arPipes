@@ -1,5 +1,8 @@
 class StraightPipe {
-    constructor() {
+    constructor(rotationZ) {
+        if(rotationZ === undefined)
+            rotationZ = 0;
+
         this.childMesh = [];
 
         const cubeMaterials = [ 
@@ -30,6 +33,10 @@ class StraightPipe {
       
           this.cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
           this.cylinder.rotation.x = Math.PI / 2;
+
+          const degreeZ = (rotationZ * Math.PI)/180;
+          this.cube.rotation.y = degreeZ;
+          this.cylinder.rotation.z -= degreeZ;
 
           this.childMesh = [this.cube, this.cylinder];
       }

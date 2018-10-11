@@ -1,5 +1,8 @@
 class FourWayPipe {
-    constructor() {
+    constructor(rotationZ) {
+        if(rotationZ === undefined)
+            rotationZ = 0;
+
         this.childMesh = [];
 
         const cubeMaterials = [ 
@@ -34,6 +37,11 @@ class FourWayPipe {
           this.cylinder2 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
           this.cylinder2.rotation.x = Math.PI / 2;
           this.cylinder2.rotation.z = Math.PI / 2;
+
+          const degreeZ = (rotationZ * Math.PI)/180;
+          this.cube.rotation.y = degreeZ;
+          this.cylinder1.rotation.z -= degreeZ;
+          this.cylinder2.rotation.z -= degreeZ;
 
           this.childMesh = [this.cube, this.cylinder1, this.cylinder2];
       }
