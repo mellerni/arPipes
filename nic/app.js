@@ -306,6 +306,7 @@ class App {
   }
 
   async save(){
+    this.currentPipe.save();
     this.currentPipe = new StraightPipe();
     this.typeIndex = 0;
   }
