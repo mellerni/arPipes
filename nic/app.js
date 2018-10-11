@@ -22,7 +22,7 @@ class App {
 
     this.currentPipe = new StraightPipe();
     this.typeIndex = 0;
-    this.types = ["Straight", "Tee", "FourWay"];
+    this.types = ["Straight", "Bend90Pipe", "Tee", "FourWay"];
     this.currentHitMatrix = undefined;
     this.currentX = 0;
     this.currentY = 0;
@@ -117,7 +117,6 @@ class App {
       // DOM since we know it will now be used.
       document.body.appendChild(outputCanvas);
       this.onSessionStarted(session);
-      this.addGUIControls();
     } catch (e) {
       // If `requestSession` fails, the canvas is not added, and we
       // call our function for unsupported browsers.
@@ -131,19 +130,6 @@ class App {
    */
   onNoXRDevice() {
     document.body.classList.add('unsupported');
-  }
-
-  addGUIControls() {
-    // const pipeTypeText = this.gui.add(text, 'Type', [ 'Straight', 'Tee', 'Four Way' ] );
-
-    // pipeTypeText.onChange(async function(type) {
-    //   if(type === 'Tee')
-    //     this.currentPipe = new TeePipe();
-    //   if(type === 'Four Way')
-    //     this.currentPipe = new FourWayPipe();
-
-    //   this.currentPipe = new StraightPipe();
-    // });
   }
 
   /**
@@ -329,6 +315,9 @@ class App {
     switch(this.types[this.typeIndex]) {
       case "Tee":
         this.currentPipe = new TeePipe(this.currentRotationZ);
+        break;
+      case "Bend90Pipe":
+        this.currentPipe = new Bend90Pipe(this.currentRotationZ);
         break;
       case "FourWay":
         this.currentPipe = new FourWayPipe(this.currentRotationZ);
